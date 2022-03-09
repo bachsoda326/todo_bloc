@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:todo_bloc/models/todo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo_bloc/presentation/todos/cubit/todos_cubit.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_bloc.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_event.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_state.dart';
 import 'package:uuid/uuid.dart';
 
 class AddOrEditTodo extends StatefulWidget {
@@ -39,59 +41,63 @@ class _AddOrEditTodoState extends State<AddOrEditTodo> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(widget.isEdit ? 'Edit Todo' : 'Add Todo',
-            style: const TextStyle(fontSize: 20)),
-        TextFormField(
-          controller: _titleController,
-          decoration: const InputDecoration(
-            hintText: 'What need to be done?',
-            labelText: 'Title',
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _notesController,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: 'Additional Notes...',
-            labelText: 'Notes',
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(fontSize: 20)),
+    return BlocListener<TodosBloc, TodosState>(
+      listenWhen: (previous, current) {
+        return previous.todos != current.todos;
+      },
+      listener: (context, state) {
+        if (state is TodosLoadedSuccess) Navigator.pop(context);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(widget.isEdit ? 'Edit Todo' : 'Add Todo',
+              style: const TextStyle(fontSize: 20)),
+          TextFormField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              hintText: 'What need to be done?',
+              labelText: 'Title',
             ),
-            TextButton(
-              onPressed: () async {
-                final Todo todo = Todo(
-                  id: widget.todo?.id ?? const Uuid().v4(),
-                  title: _titleController.text,
-                  note: _notesController.text,
-                  isComplete: widget.todo?.isComplete ?? false,
-                );
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _notesController,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              hintText: 'Additional Notes...',
+              labelText: 'Notes',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel', style: TextStyle(fontSize: 20)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final Todo todo = Todo(
+                    id: widget.todo?.id ?? const Uuid().v4(),
+                    title: _titleController.text,
+                    note: _notesController.text,
+                    isComplete: widget.todo?.isComplete ?? false,
+                  );
 
-                if (widget.isEdit) {
-                  final bool isSuccess =
-                      await context.read<TodosCubit>().updateTodo(todo);
-                  if (isSuccess) Navigator.pop(context);
-                } else {
-                  final bool isSuccess =
-                      await context.read<TodosCubit>().addTodo(todo);
-                  if (isSuccess) Navigator.pop(context);
-                }
-              },
-              child: const Text('Ok', style: TextStyle(fontSize: 20)),
-            ),
-          ],
-        ),
-      ],
+                  if (widget.isEdit) {
+                    context.read<TodosBloc>().add(TodosUpdated(todo));
+                  } else {
+                    context.read<TodosBloc>().add(TodosAdded(todo));
+                  }
+                },
+                child: const Text('Ok', style: TextStyle(fontSize: 20)),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_bloc/frameworks/common_service.dart';
-import 'package:todo_bloc/frameworks/enum.dart';
-import 'package:todo_bloc/presentation/todos/cubit/todos_cubit.dart';
-import 'package:todo_bloc/presentation/todos/state/todos_state.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_bloc.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_event.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_state.dart';
 import 'package:todo_bloc/presentation/todos/widgets/filter_button.dart';
 import 'package:todo_bloc/presentation/todos/widgets/todo_item.dart';
 
@@ -22,14 +22,14 @@ class _TodosScreenState extends State<TodosScreen> {
     _getTodos();
   }
 
-  _getTodos({bool hasLoading = false}) =>
-      context.read<TodosCubit>().getTodos(hasLoading: hasLoading);
+  Future<void> _getTodos({bool hasLoading = false}) async =>
+      context.read<TodosBloc>().add(TodosLoaded(hasLoading: hasLoading));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todos using Cubit'),
+        title: const Text('Todos using Bloc'),
         actions: const [
           FilterButton(),
         ],
@@ -38,32 +38,30 @@ class _TodosScreenState extends State<TodosScreen> {
         onRefresh: () => _getTodos(hasLoading: true),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: BlocBuilder<TodosCubit, TodosState>(
+          child: BlocBuilder<TodosBloc, TodosState>(
             builder: (context, state) {
-              switch (state.status) {
-                case CommonStatus.init:
-                case CommonStatus.loading:
-                  return const Center(child: CircularProgressIndicator());
-                case CommonStatus.failure:
-                  return LayoutBuilder(
-                    builder: (context, constraints) => ListView(
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: const Text('No data'),
-                        )
-                      ],
-                    ),
-                  );
-                case CommonStatus.success:
-                  return ListView(
-                    children: state.displayedTodos
-                        .map((todo) => TodoItem(todo))
-                        .toList(),
-                  );
+              if (state is TodosLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is TodosLoadedFail) {
+                return LayoutBuilder(
+                  builder: (context, constraints) => ListView(
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: const Text('No data'),
+                      )
+                    ],
+                  ),
+                );
+              } else {
+                return ListView(
+                  children: state.displayedTodos
+                      .map((todo) => TodoItem(todo, parentContext: context))
+                      .toList(),
+                );
               }
             },
           ),

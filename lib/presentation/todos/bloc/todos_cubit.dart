@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:todo_bloc/frameworks/common_service.dart';
 import 'package:todo_bloc/frameworks/enum.dart';
 import 'package:todo_bloc/models/todo.dart';
 import 'package:todo_bloc/repositories/todo_repository.dart';
@@ -50,13 +50,12 @@ class TodosCubit extends Cubit<TodosState> {
 
       final List<Todo> todos = await _repository.getTodos();
 
-      Fluttertoast.showToast(msg: 'Add successfully', timeInSecForIosWeb: 3);
+      CommonService.showToast('Add successfully');
       emit(state.copyWith(todos: todos, displayedTodos: todos));
 
       return true;
     } on Exception catch (_) {
-      Fluttertoast.showToast(
-          msg: 'Something went wrong', timeInSecForIosWeb: 3);
+      CommonService.showToast('Something went wrong');
       emit(state.copyWith());
 
       return false;
@@ -72,13 +71,12 @@ class TodosCubit extends Cubit<TodosState> {
         return e;
       }).toList();
 
-      Fluttertoast.showToast(msg: 'Success', timeInSecForIosWeb: 3);
+      CommonService.showToast('Success');
       emit(state.copyWith(todos: todos, displayedTodos: todos));
 
       return true;
     } on Exception catch (_) {
-      Fluttertoast.showToast(
-          msg: 'Something went wrong', timeInSecForIosWeb: 3);
+      CommonService.showToast('Something went wrong');
       emit(state.copyWith());
 
       return false;
@@ -92,11 +90,10 @@ class TodosCubit extends Cubit<TodosState> {
       final List<Todo> todos = List.from(state.todos)
         ..removeWhere((e) => e.id == todo.id);
 
-      Fluttertoast.showToast(msg: 'Success', timeInSecForIosWeb: 3);
+      CommonService.showToast('Success');
       emit(state.copyWith(todos: todos, displayedTodos: todos));
     } on Exception catch (_) {
-      Fluttertoast.showToast(
-          msg: 'Something went wrong', timeInSecForIosWeb: 3);
+      CommonService.showToast('Something went wrong');
       emit(state.copyWith());
     }
   }

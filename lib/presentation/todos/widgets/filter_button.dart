@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todo_bloc/frameworks/enum.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo_bloc/presentation/todos/cubit/todos_cubit.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_bloc.dart';
+import 'package:todo_bloc/presentation/todos/bloc/todos_event.dart';
 
 class FilterButton extends StatefulWidget {
   const FilterButton({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class _FilterButtonState extends State<FilterButton> {
       _currentType = val;
     });
 
-    context.read<TodosCubit>().filterTodos(val);
+    context.read<TodosBloc>().add(TodosFiltered(val));
   }
 
   @override
